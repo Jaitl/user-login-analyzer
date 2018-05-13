@@ -3,7 +3,9 @@ package com.github.jaitl.analyzer
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.time.Instant
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 import com.github.jaitl.analyzer.csv.CsvReader
 import com.github.jaitl.analyzer.csv.CsvWriter
@@ -11,7 +13,6 @@ import com.github.jaitl.analyzer.exception.InputFileNotExistException
 import com.github.jaitl.analyzer.exception.OutputFileAlreadyExistsException
 import com.github.jaitl.analyzer.service.LoginAnalysisService
 import com.github.jaitl.analyzer.service.TimeWindowService
-import com.github.jaitl.analyzer.utils.InstantUtils
 import com.typesafe.scalalogging.StrictLogging
 import org.rogach.scallop.ScallopConf
 import org.rogach.scallop.ScallopOption
@@ -29,7 +30,8 @@ import scala.util.Success
  * --window-size - размер окна в формате scala.concurrent.duration.Duration
  *                 например: "1 minute", "2 hours", "1 day"
  * --time-zone (опциональный, по умолчанию UTC) - временная зона в которой находятся даты из входного файла
- * --start-date (опциональны) - опциональный параметр для указания момента времени с которого начинается первое окно.
+ * --start-date (опциональны, формат: 2015-11-30T23:00:00) - опциональный параметр для указания момента времени
+ *                 с которого начинается первое окно.
  *                 Если параметр не указан, то берется самое первое время и окна считаются от него.
  *                 Используется в случае если первый логин в коллекции произошел, например в "00:12:11", а окно
  *                 нужно начать считать с "00:00:00"
@@ -54,7 +56,8 @@ object Main extends StrictLogging {
 
     val windowSize = Duration(conf.windowSize())
 
-    val startDate = conf.startDate.toOption.map(date => InstantUtils.instantFrom(date, timeZone))
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(timeZone)
+    val startDate = conf.startDate.toOption.map(date => Instant.from(formatter.parse(date)))
     logger.info(s"startDate: $startDate")
 
     val reader = new CsvReader(timeZone)
