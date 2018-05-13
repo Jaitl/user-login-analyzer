@@ -1,4 +1,6 @@
 # user-login-analyzer
+[![Build Status](https://travis-ci.org/Jaitl/user-login-analyzer.svg?branch=master)](https://travis-ci.org/Jaitl/user-login-analyzer)
+[![Coverage Status](https://coveralls.io/repos/github/Jaitl/user-login-analyzer/badge.svg)](https://coveralls.io/github/Jaitl/user-login-analyzer)
 ## Задача
 Для каждого факта известно имя пользователя, IP адрес с которого осуществлялся вход и время входа.
 
