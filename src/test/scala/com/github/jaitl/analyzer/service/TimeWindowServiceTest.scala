@@ -1,7 +1,8 @@
 package com.github.jaitl.analyzer.service
 
 import com.github.jaitl.analyzer.InstantTestUtils
-import com.github.jaitl.analyzer.exception.EmptyLoginCollection
+import com.github.jaitl.analyzer.exception.EmptyLoginCollectionException
+import com.github.jaitl.analyzer.exception.WrongInitialDateException
 import com.github.jaitl.analyzer.model.LoginInfo
 import com.github.jaitl.analyzer.model.WindowLoginInfo
 import org.scalatest.FunSuite
@@ -17,7 +18,20 @@ class TimeWindowServiceTest extends FunSuite with Matchers {
     val timeWindowService = new TimeWindowService(4.seconds)
     val result = timeWindowService.computeWindows(Seq.empty, None)
 
-    result.failed.get.getClass shouldBe classOf[EmptyLoginCollection]
+    result.failed.get.getClass shouldBe classOf[EmptyLoginCollectionException]
+  }
+
+  test("wrong initial date") {
+    val dates = Seq(
+      LoginInfo("user1", "123.11.11.11", instantFrom("2018-01-01 00:00:01")),
+      LoginInfo("user2", "123.11.11.11", instantFrom("2018-01-01 00:00:02"))
+    )
+
+    val timeWindowService = new TimeWindowService(4.seconds)
+
+    val result = timeWindowService.computeWindows(dates, Some(instantFrom("2018-01-01 01:00:00")))
+
+    result.failed.get.getClass shouldBe classOf[WrongInitialDateException]
   }
 
   test("loginCollection with a window size of 4 seconds") {

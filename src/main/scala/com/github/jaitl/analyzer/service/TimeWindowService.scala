@@ -2,7 +2,8 @@ package com.github.jaitl.analyzer.service
 
 import java.time.Instant
 
-import com.github.jaitl.analyzer.exception.EmptyLoginCollection
+import com.github.jaitl.analyzer.exception.EmptyLoginCollectionException
+import com.github.jaitl.analyzer.exception.WrongInitialDateException
 import com.github.jaitl.analyzer.model.LoginInfo
 import com.github.jaitl.analyzer.model.WindowLoginInfo
 
@@ -29,7 +30,7 @@ class TimeWindowService(windowSize: Duration) {
    *    диапазон следующего временного окна. Факт логина сохраняется в новое окно, с этого момента новое окно считается
    *    текущем.
    *
-   * @param loginCollection     - коллекция с информацией о фактах логина.
+   * @param loginCollection - коллекция с информацией о фактах логина.
    * @param fromDate - опциональный параметр для указания момента времени с которого начинается первое окно.
    *                 Если параметр не указан, то берется самое первое время и окна считаются от него.
    *                 Используется в случае если первый логин в коллекции произошел, например в "00:12:11", а окно
@@ -38,10 +39,16 @@ class TimeWindowService(windowSize: Duration) {
    */
   def computeWindows(loginCollection: Seq[LoginInfo], fromDate: Option[Instant]): Try[Seq[WindowLoginInfo]] = Try {
     if (loginCollection.isEmpty) {
-      throw new EmptyLoginCollection("empty login collection")
+      throw new EmptyLoginCollectionException("empty login collection")
     }
 
     val sortedLogin = loginCollection.sortBy(_.date)
+
+    fromDate.foreach { date =>
+      if (date > sortedLogin.head.date) {
+        throw new WrongInitialDateException("fromDate more than the minimum date in loginCollection")
+      }
+    }
 
     val startDate = fromDate match {
       case Some(date) => date
